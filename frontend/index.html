@@ -1,0 +1,86 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Live Chess Viewer</title>
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <script src="/static/chess.min.js"></script>
+    <script src="/static/chessboard-1.0.0.min.js"></script>
+    <link rel="stylesheet" href="/static/chessboard-1.0.0.min.css" />
+</head>
+<body>
+    <h1>Live Chess Viewer</h1>
+    <div id="board" style="width: 400px"></div>
+    <script>
+        // Inizializza prima l'oggetto chess
+        const game = new Chess();
+        const board = Chessboard('board', {
+                                  draggable: true,
+                                  pieceTheme: 'https://chessboardjs.com/img/chesspieces/wikipedia/{piece}.png',
+                                  position: 'start'
+                                  });
+
+        const socket = new WebSocket(
+        window.location.protocol === 'https:'
+        ? `wss://${window.location.host}/ws`
+        : `ws://${window.location.host}/ws`
+        );
+
+        // Gestione errori avanzata
+        socket.onerror = (error) => {
+            console.error("WebSocket Error:", {
+                code: error.code,
+                reason: error.reason,
+                wasClean: error.wasClean,
+                url: error.target.url
+            });
+            // Logica di ripristino automatico
+            setTimeout(() => window.location.reload(), 3000);
+        };
+
+        socket.onopen = function() {
+            console.log("[DEBUG] WebSocket connected");
+            // Puoi mostrare all'utente che la connessione è OK, ad esempio:
+            document.body.insertAdjacentHTML('beforeend', '<p style="color:green">WebSocket connected ✔️</p>');
+        };
+
+        socket.onerror = function(err) {
+            console.error("[DEBUG] WebSocket error:", err);
+            document.body.insertAdjacentHTML('beforeend', '<p style="color:red">WebSocket error ❌</p>');
+        };
+
+        socket.onclose = function() {
+            console.log("[DEBUG] WebSocket closed");
+            document.body.insertAdjacentHTML('beforeend', '<p style="color:orange">WebSocket disconnected ⚠️</p>');
+            // Tentativo di riconnessione opzionale, vedi sotto
+        };
+
+        // Riconnessione semplice (opzionale)
+        function connectWebSocket() {
+            if (socket.readyState === WebSocket.CLOSED || socket.readyState === WebSocket.CLOSING) {
+                console.log("[DEBUG] Attempting to reconnect WebSocket...");
+                // Qui puoi ricreare socket e ri-assegnare eventi se vuoi
+                // (implementazione avanzata lascia a te)
+            }
+        }
+
+        function loadState() {
+            fetch("/api/state")
+                .then(res => res.json())
+                .then(data => {
+                    console.log("[DEBUG] Initial FEN:", data.fen);
+                    if (data.fen !== 'startpos') board.position(data.fen);
+                });
+        }
+
+        socket.onmessage = function(event) {
+            const data = JSON.parse(event.data);
+            console.log("[DEBUG] Received data:", data);
+            board.position(data.fen);
+        };
+
+        loadState();
+    </script>
+
+</body>
+</html>
