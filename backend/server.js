@@ -35,7 +35,7 @@ if (!SERVER_PORT) {
 console.log("=== ENVIRONMENT ===");
 console.log(`SERVER_PORT = ${SERVER_PORT}`);
 
-let state = "rnbqkbnr/pppppppp/8/8/4P3/8/PPPP1PPP/RNBQKBNR b KQkq e3 0 1";
+let state = "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR b KQkq e3 0 1";
 const activeConnections = new Set();
 
 // Routes
