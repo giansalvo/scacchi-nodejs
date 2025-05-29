@@ -1,19 +1,26 @@
 // backend/server.js
 
-const express = require("express");
-const http = require("http");
-const WebSocket = require("ws");
-const path = require("path");
-const fs = require("fs");
-const cors = require("cors");
-const dotenv = require("dotenv");
+import express from "express";
+import http from "http";
+import path from "path";
+import fs from "fs";
+import { fileURLToPath } from "url";
+import { dirname } from "path";
+import { WebSocketServer, WebSocket } from "ws";
+
+import cors from "cors";
+import dotenv from "dotenv";
+
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = dirname(__filename);
 
 // Load environment variables
 dotenv.config();
 
 const app = express();
 const server = http.createServer(app);
-const wss = new WebSocket.Server({ server });
+const wss = new WebSocketServer({ server });
+
 
 // Middleware
 app.use(cors());
